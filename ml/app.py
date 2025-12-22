@@ -16,8 +16,16 @@ async def upload(file: UploadFile = File(...)):
     os.makedirs("data/raw", exist_ok=True)
     os.makedirs("data/processed", exist_ok=True)
 
-    df = pd.read_csv(file.file)
+    df = pd.read_csv(
+        file.file,
+        encoding="latin1",
+        sep=",",
+        engine="python",
+        on_bad_lines="skip"
+    )
+
     df = df.dropna()
+
     df.to_csv(RAW_PATH, index=False)
 
     processed = preprocess(RAW_PATH)
@@ -27,8 +35,10 @@ async def upload(file: UploadFile = File(...)):
 
     return {
         "status": "uploaded, processed and trained",
-        "rows": len(df)
+        "rows_after_cleaning": len(df)
     }
+
+
 
 @app.get("/predict/")
 def predict_api(hostel: str, day: str, hour: int):
